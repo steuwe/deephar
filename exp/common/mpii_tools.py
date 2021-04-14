@@ -63,7 +63,8 @@ def absulute_pred(model, frames, afmat, outidx, batch_size=8):
 def eval_singleperson_pckh(model, fval, pval, afmat_val, headsize_val,
         win=None, batch_size=8, refp=0.5, map_to_pa16j=None, pred_per_block=1,
         verbose=1):
-
+    print("*******************")
+    model.summary()
     input_shape = model.get_input_shape_at(0)
     if len(input_shape) == 5:
         """Video clip processing."""
