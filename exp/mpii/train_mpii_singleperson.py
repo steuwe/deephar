@@ -38,7 +38,7 @@ if len(sys.argv) > 1:
     logdir = sys.argv[1]
     mkdir(logdir)
     sys.stdout = open(str(logdir) + '/log.txt', 'w')
-
+print("*******debug******")
 weights_file = os.path.join(logdir, 'weights_mpii_{epoch:03d}.h5')
 
 """Architecture configuration."""
