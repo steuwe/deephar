@@ -107,7 +107,7 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
     left_pad = joints_pad // 2
     right_pad = (joints_pad + 1) // 2
 
-    x1 = tf.convert_to_tensor(np.random.rand(1, 8, 10, 160).astype(np.float32))
+    x1 = Lambda(lambda x:tf.convert_to_tensor(np.random.rand(1, 8, 10, 160).astype(np.float32)))
     print("shape of pose features:")
     print(x1.shape)
     """Appearance features."""
@@ -122,10 +122,10 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
     fusion = [x1, x2]
     if xa is not None:
         fusion.append(xa)
-
+    x = x2
     #x = concat_tensorlist(fusion)
     # x = add_tensorlist(fusion)
-    x = residual(x2, (3, 3), out_size=num_features, convtype='normal',
+    x = residual(x, (3, 3), out_size=num_features, convtype='normal',
             features_div=4, name=appstr(name, '_r2'))
 
     xa = _prediction(x, name=appstr(name, '_pred'),
