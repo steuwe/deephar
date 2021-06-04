@@ -106,14 +106,14 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
     bottom_pad = (frames_pad + 1) // 2
     left_pad = joints_pad // 2
     right_pad = (joints_pad + 1) // 2
-    def get_tensor(x):
-        return tf.convert_to_tensor(np.random.rand(1, 8, 10, 160).astype(np.float32))
-    x1 = Lambda(get_tensor)(xa)
-    print("shape of pose features:")
-    print(x1.shape)
+    
     """Appearance features."""
     x = conv2d(af, num_visual_features, (1, 1), name=appstr(name, '_v_conv0'))
-
+    def get_tensor(x):
+        return tf.convert_to_tensor(np.random.rand(1, 8, 10, 160).astype(np.float32))
+    x1 = Lambda(get_tensor)(x)
+    print("shape of pose features:")
+    print(x1.shape)
     if top_pad + bottom_pad + left_pad + right_pad > 0:
         x = ZeroPadding2D(((top_pad, bottom_pad), (left_pad, right_pad)))(x)
     x2 = maxpooling2d(x, (2, 2), strides=(time_stride, 2))
