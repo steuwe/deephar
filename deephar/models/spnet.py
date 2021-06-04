@@ -123,9 +123,9 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
     if xa is not None:
         fusion.append(xa)
 
-    x = concat_tensorlist(fusion)
+    #x = concat_tensorlist(fusion)
     # x = add_tensorlist(fusion)
-    x = residual(x, (3, 3), out_size=num_features, convtype='normal',
+    x = residual(x2, (3, 3), out_size=num_features, convtype='normal',
             features_div=4, name=appstr(name, '_r2'))
 
     xa = _prediction(x, name=appstr(name, '_pred'),
@@ -157,7 +157,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
         act_cnt += 1
         act_name = 'act%d' % act_cnt
 
-        act_h = tf.convert_to_tensor(np.random.rand(1, 8, 16, 16, 20).astype(np.float32))
+        act_h = tf.convert_to_tensor(np.random.rand(1, 8, xp.shape[1].value, xp.shape[1].value, 20).astype(np.float32))
         print("shape of heatmap:")
         print(act_h.shape)
         af = kronecker_prod(act_h, zp, name=appstr(act_name, '_kron'))
