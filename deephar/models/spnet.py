@@ -48,7 +48,7 @@ def prediction_branch(x, cfg, pred_activate=True, replica=None,
     return x, pred_maps, replica
 
 
-def action_prediction_early_fusion(xa, p, c, af, cfg, name=None):
+def action_prediction_early_fusion(xa, af, cfg, name=None):
 
     num_actions = cfg.num_actions
 
@@ -156,19 +156,13 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
         act_cnt += 1
         act_name = 'act%d' % act_cnt
 
-        act_h = rep_h if replica else org_h
-        act_h = Activation(channel_softmax_2d(alpha=sam_alpha),
-                name=appstr(act_name, '_probmaps2'))(act_h)
-        act_p = softargmax2d(act_h, limits=(xmin, ymin, 1-xmin, 1-ymin),
-                name=appstr(act_name, '_xy2'))
-        act_c = keypoint_confidence(act_h, name=appstr(act_name, '_vis2'))
-        
+        act_h = tf.convert_to_tensor(np.random.rand(1, 8, 16, 16, 20))
         print("shape of heatmap:")
         print(act_h.shape)
         af = kronecker_prod(act_h, zp, name=appstr(act_name, '_kron'))
         print("shape after kronecker_prod:")
         print(af.shape)
-        action, xa = action_prediction_early_fusion(xa, act_p, act_c, af, cfg,
+        action, xa = action_prediction_early_fusion(xa, af, cfg,
                 name=appstr(act_name, '_action'))
 
     xp = add_tensorlist(reinject)
