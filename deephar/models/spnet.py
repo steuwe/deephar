@@ -106,7 +106,7 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
     left_pad = joints_pad // 2
     right_pad = (joints_pad + 1) // 2
 
-    x1 = tf.convert_to_tensor(np.random.rand(1, 8, 10, 160).astype(np.float64))
+    x1 = tf.convert_to_tensor(np.random.rand(1, 8, 10, 160).astype(np.float32))
     print("shape of pose features:")
     print(x1.shape)
     """Appearance features."""
@@ -156,7 +156,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
         act_cnt += 1
         act_name = 'act%d' % act_cnt
 
-        act_h = tf.convert_to_tensor(np.random.rand(1, 8, 16, 16, 20).astype(np.float64))
+        act_h = tf.convert_to_tensor(np.random.rand(1, 8, 16, 16, 20).astype(np.float32))
         print("shape of heatmap:")
         print(act_h.shape)
         af = kronecker_prod(act_h, zp, name=appstr(act_name, '_kron'))
