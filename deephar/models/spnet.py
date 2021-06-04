@@ -157,7 +157,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
         act_cnt += 1
         act_name = 'act%d' % act_cnt
 
-        act_h = tf.convert_to_tensor(np.random.rand(1, 8, xp.shape[1].value, xp.shape[1].value, 20).astype(np.float32))
+        act_h = tf.convert_to_tensor(np.random.rand(1, 8, xp.shape[2].value, xp.shape[2].value, 20).astype(np.float32))
         print("shape of heatmap:")
         print(act_h.shape)
         af = kronecker_prod(act_h, zp, name=appstr(act_name, '_kron'))
