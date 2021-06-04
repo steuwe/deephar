@@ -165,9 +165,6 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
         print(af.shape)
         action, xa = action_prediction_early_fusion(xa, af, cfg,
                 name=appstr(act_name, '_action'))
-
-    xp = add_tensorlist(reinject)
-    outlist[0].append(concatenate([p, c], name=name))
     if do_action:
         outlist[1] += action
 
