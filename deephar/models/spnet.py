@@ -349,10 +349,6 @@ def split_model(full_model, cfg, interlaced=False, model_names=[None, None]):
 
     num_pose_pred = get_num_predictions(cfg.num_pyramids, cfg.num_levels)
     num_act_pred = get_num_predictions(len(cfg.action_pyramids), cfg.num_levels)
-    assert len(full_model.outputs) == \
-            num_pose_pred + len(cfg.num_actions)*num_act_pred, \
-            'The given model and config are not compatible!'
-    assert num_act_pred > 0, 'You are trying to split a "pose only" model.'
 
     if interlaced:
         out_p = []
