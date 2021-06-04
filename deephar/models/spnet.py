@@ -359,21 +359,16 @@ def split_model(full_model, cfg, interlaced=False, model_names=[None, None]):
         out_a = []
 
         idx = 0
-        for i in range(num_pose_pred):
-            out_p.append(full_model.outputs[idx])
-            idx += 1
-            if len(out_a) < len(cfg.num_actions)*num_act_pred:
-                for aidx in range(len(cfg.num_actions)):
-                    out_a.append(full_model.outputs[idx])
-                    idx += 1
-
+        for i in range(num_act_pred):
+            out_a.append(full_model.outputs[idx])
+            
         modelp = Model(full_model.input, out_p, name=model_names[0])
         modela = Model(full_model.input, out_a, name=model_names[1])
 
     else:
-        modelp = Model(full_model.input, full_model.outputs[:num_pose_pred],
+        modela = Model(full_model.input, full_model.outputs[:num_pose_pred],
                 name=model_names[0])
-        modela = Model(full_model.input, full_model.outputs[num_pose_pred:],
+        modelp = Model(full_model.input, full_model.outputs[num_pose_pred:],
                 name=model_names[1])
 
     return [modelp, modela]
