@@ -96,7 +96,8 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
         return x
 
     """Define padding strategy."""
-    num_frames, num_joints = K.int_shape(p)[1:3]
+    num_frames = 8 
+    num_joints = 20
     time_stride = 2 if num_frames >= 16 else 1
     get_pad = lambda div, n: int(div*np.ceil(n / div) - n)
     joints_pad = get_pad(4, num_joints)
