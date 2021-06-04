@@ -106,24 +106,7 @@ def action_prediction_early_fusion(xa, p, c, af, cfg, name=None):
     left_pad = joints_pad // 2
     right_pad = (joints_pad + 1) // 2
 
-    """Pose features."""
-    mask = Lambda(lambda x: K.tile(x, (1, 1, 1, K.int_shape(p)[-1])))(c)
-    x = Lambda(lambda x: x[0] * x[1])([p, mask])
-
-    a = conv2d(x, num_pose_features // 16, (3, 1),
-            name=appstr(name, '_p_conv0a'))
-    b = conv2d(x, num_pose_features // 8, (3, 3),
-            name=appstr(name, '_p_conv0b'))
-    c = conv2d(x, num_pose_features // 4, (3, 5),
-            name=appstr(name, '_p_conv0c'))
-    x = concatenate([a, b, c])
-
-    x = residual(x, (3, 3), out_size=num_pose_features, convtype='normal',
-            features_div=2, name=appstr(name, '_r1'))
-
-    if top_pad + bottom_pad + left_pad + right_pad > 0:
-        x = ZeroPadding2D(((top_pad, bottom_pad), (left_pad, right_pad)))(x)
-    x1 = maxpooling2d(x, (2, 2), strides=(time_stride, 2))
+    x1 = tf.convert_to_tensor(np.random.rand(1, 8, 10, 160))
     print("shape of pose features:")
     print(x1.shape)
     """Appearance features."""
@@ -148,7 +131,6 @@ def action_prediction_early_fusion(xa, p, c, af, cfg, name=None):
             shortname=appstr(shortname, '_a'))
     print("early fusion returns: action, xa:")
     print(action)
-    print()
     print(xa)
     return action, xa
 
@@ -164,51 +146,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
     replica = cfg.pose_replica and do_action
     dbg_decoupled_pose = cfg.dbg_decoupled_pose and do_action
     dbg_decoupled_h = cfg.dbg_decoupled_h and do_action
-
-    xp = residual(xp, kernel_size, name=appstr(name, '_r1'))
-    reinject = [xp]
-
-    xp = BatchNormalization(name=appstr(name, '_bn1'))(xp)
-    xp = relu(xp, name=appstr(name, '_act1'))
-    xp = sepconv2d(xp, num_features, kernel_size, name=appstr(name, '_conv1'))
-    reinject.append(xp)
-
-    xp = BatchNormalization(name=appstr(name, '_bn2'))(xp)
-
-    """2D pose estimation."""
-    x1, org_h, rep_h = prediction_branch(xp, cfg, pred_activate=True,
-            replica=replica, name=appstr(name, '_heatmaps'))
-    reinject.append(x1)
-
-    h = Activation(channel_softmax_2d(alpha=sam_alpha),
-            name=appstr(name, '_probmaps'))(org_h)
-
-    p = softargmax2d(h, limits=(xmin, ymin, 1-xmin, 1-ymin),
-            name=appstr(name, '_xy'))
-    c = keypoint_confidence(h, name=appstr(name, '_vis'))
-
-    if dbg_decoupled_pose:
-        """Output decoupled poses in debug mode."""
-        dbg_h = Activation(channel_softmax_2d(alpha=sam_alpha),
-                name=appstr(name, '_dbg_h'))(rep_h)
-        dbg_p = softargmax2d(dbg_h, limits=(xmin, ymin, 1-xmin, 1-ymin),
-                name=appstr(name, '_dbg_xy'))
-
-        dbg_c = keypoint_confidence(dbg_h, name=appstr(name, '_dbg_vis'))
-
-    """Depth estimation."""
-    if dim == 3:
-        x1, org_d, rep_d = prediction_branch(xp, cfg, pred_activate=False,
-                replica=replica, forward_maps=False,
-                name=appstr(name, '_depthmaps'))
-        reinject.append(x1)
-
-        d = Activation('sigmoid')(org_d)
-        z = multiply([d, h])
-        z = Lambda(lambda x: K.sum(x, axis=(-2, -3)))(z)
-        z = Lambda(lambda x: K.expand_dims(x, axis=-1))(z)
-        p = concatenate([p, z], name=appstr(name, '_xyz'))
-
+    
     """Visual features (for action only)."""
     action = []
     if do_action:
@@ -224,15 +162,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
         act_p = softargmax2d(act_h, limits=(xmin, ymin, 1-xmin, 1-ymin),
                 name=appstr(act_name, '_xy2'))
         act_c = keypoint_confidence(act_h, name=appstr(act_name, '_vis2'))
-
-        if dim == 3:
-            act_d = rep_d if replica else org_d
-            act_d = Activation('sigmoid')(act_d)
-            act_z = multiply([act_d, act_h])
-            act_z = Lambda(lambda x: K.sum(x, axis=(-2, -3)))(act_z)
-            act_z = Lambda(lambda x: K.expand_dims(x, axis=-1))(act_z)
-            act_p = concatenate([act_p, act_z],
-                    name=appstr(act_name, '_xyz2'))
+        
         print("shape of heatmap:")
         print(act_h.shape)
         af = kronecker_prod(act_h, zp, name=appstr(act_name, '_kron'))
@@ -245,10 +175,6 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
     outlist[0].append(concatenate([p, c], name=name))
     if do_action:
         outlist[1] += action
-
-    if dbg_decoupled_pose:
-        outlist[2].append(concatenate([dbg_p, dbg_c]))
-        outlist[3].append(dbg_h)
 
     sys.stdout.flush()
 
