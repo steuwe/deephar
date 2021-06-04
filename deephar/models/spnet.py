@@ -124,14 +124,16 @@ def action_prediction_early_fusion(xa, p, c, af, cfg, name=None):
     if top_pad + bottom_pad + left_pad + right_pad > 0:
         x = ZeroPadding2D(((top_pad, bottom_pad), (left_pad, right_pad)))(x)
     x1 = maxpooling2d(x, (2, 2), strides=(time_stride, 2))
-
+    print("shape of pose features:")
+    print(x1.shape)
     """Appearance features."""
     x = conv2d(af, num_visual_features, (1, 1), name=appstr(name, '_v_conv0'))
 
     if top_pad + bottom_pad + left_pad + right_pad > 0:
         x = ZeroPadding2D(((top_pad, bottom_pad), (left_pad, right_pad)))(x)
     x2 = maxpooling2d(x, (2, 2), strides=(time_stride, 2))
-
+    print("shape of appearance features:")
+    print(x2.shape)
     """Feature fusion."""
     fusion = [x1, x2]
     if xa is not None:
@@ -144,7 +146,10 @@ def action_prediction_early_fusion(xa, p, c, af, cfg, name=None):
 
     xa = _prediction(x, name=appstr(name, '_pred'),
             shortname=appstr(shortname, '_a'))
-
+    print("early fusion returns: action, xa:")
+    print(action)
+    print()
+    print(xa)
     return action, xa
 
 
@@ -228,9 +233,11 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
             act_z = Lambda(lambda x: K.expand_dims(x, axis=-1))(act_z)
             act_p = concatenate([act_p, act_z],
                     name=appstr(act_name, '_xyz2'))
-
+        print("shape of heatmap:")
+        print(act_h.shape)
         af = kronecker_prod(act_h, zp, name=appstr(act_name, '_kron'))
-
+        print("shape after kronecker_prod:")
+        print(af.shape)
         action, xa = action_prediction_early_fusion(xa, act_p, act_c, af, cfg,
                 name=appstr(act_name, '_action'))
 
@@ -309,7 +316,10 @@ def upscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
 
         xp, xa = prediction_block(xp, xa, lzp[i], outlist, cfg, do_action,
                 name=appstr(name, '_pb%d' % i))
-
+        print("return value from prediction block in upscaling pyramid: xp, xa")
+        print(xp)
+        print()
+        print(xa)
         lp[i] = xp # lateral pose connection
         la[i] = xa # lateral action connection
 
