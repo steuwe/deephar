@@ -137,7 +137,7 @@ def action_prediction_early_fusion(xa, af, cfg, name=None):
     return action, xa
 
 
-def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
+def prediction_block(heatmap, xp, xa, zp, outlist, cfg, do_action, name=None):
 
     dim = cfg.dim
     kernel_size = cfg.kernel_size
@@ -148,7 +148,8 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
     replica = cfg.pose_replica and do_action
     dbg_decoupled_pose = cfg.dbg_decoupled_pose and do_action
     dbg_decoupled_h = cfg.dbg_decoupled_h and do_action
-    
+    new_shape = [xp.shape[2].value, xp.shape[2].value]
+    new_heatmap = tf.image.resize(heatmap, [1, 8, xp.shape[2].value, xp.shape[2].value, 1]
     """Visual features (for action only)."""
     action = []
     if do_action:
@@ -176,7 +177,7 @@ def prediction_block(xp, xa, zp, outlist, cfg, do_action, name=None):
     return xp, xa
 
 
-def downscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
+def downscaling_pyramid(heatmap, lp, la, lzp, outlist, cfg, do_action, name=None):
 
     assert len(lp) == len(la), \
             'Pose and action must have the same number of levels!'
@@ -202,14 +203,14 @@ def downscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
             if la[i] is not None:
                 xa = add([xa, la[i]])
 
-        xp, xa = prediction_block(xp, xa, lzp[i], outlist, cfg, do_action,
+        xp, xa = prediction_block(heatmap, xp, xa, lzp[i], outlist, cfg, do_action,
                 name=appstr(name, '_pb%d' % i))
 
         lp[i] = xp # lateral pose connection
         la[i] = xa # lateral action connection
 
 
-def upscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
+def upscaling_pyramid(heatmap, lp, la, lzp, outlist, cfg, do_action, name=None):
 
     assert len(lp) == len(la), \
             'Pose and action must have the same number of levels!'
@@ -235,7 +236,7 @@ def upscaling_pyramid(lp, la, lzp, outlist, cfg, do_action, name=None):
             if la[i] is not None:
                 xa = add([xa, la[i]])
 
-        xp, xa = prediction_block(xp, xa, lzp[i], outlist, cfg, do_action,
+        xp, xa = prediction_block(heatmap, xp, xa, lzp[i], outlist, cfg, do_action,
                 name=appstr(name, '_pb%d' % i))
         print("return value from prediction block in upscaling pyramid: xp, xa")
         print(xp)
@@ -295,6 +296,7 @@ def build(cfg, stop_grad_stem=False):
             'Invalid input_shape ({})'.format(input_shape)
 
     inp = Input(shape=input_shape)
+    input_heatmap = Input(shape=(56, 56))
     outlist = [] # Holds [[poses], [dbg1], [action1], [actions2], ...]
     for i in range(len(cfg.num_actions) + 1 + 2*cfg.dbg_decoupled_pose):
         outlist.append([])
@@ -325,18 +327,18 @@ def build(cfg, stop_grad_stem=False):
         do_action = (pyr + 1) in cfg.action_pyramids
 
         if pyr % 2 == 0: # Even pyramids (0, 2, ...)
-            downscaling_pyramid(lp, la, lzp, outlist, cfg, do_action,
+            downscaling_pyramid(heatmap, lp, la, lzp, outlist, cfg, do_action,
                     name='dp%d' % (pyr+1))
 
         else: # Odd pyramids (1, 3, ...)
-            upscaling_pyramid(lp, la, lzp, outlist, cfg, do_action,
+            upscaling_pyramid(heatmap, lp, la, lzp, outlist, cfg, do_action,
                     name='up%d' % (pyr+1))
 
     outputs = []
     for o in outlist:
         outputs += o
 
-    model = Model(inputs=inp, outputs=outputs, name='SPNet')
+    model = Model(inputs=[inp, input_heatmap, outputs=outputs, name='SPNet')
 
     return model
 
