@@ -148,8 +148,7 @@ def prediction_block(heatmap, xp, xa, zp, outlist, cfg, do_action, name=None):
     replica = cfg.pose_replica and do_action
     dbg_decoupled_pose = cfg.dbg_decoupled_pose and do_action
     dbg_decoupled_h = cfg.dbg_decoupled_h and do_action
-    new_shape = [xp.shape[2].value, xp.shape[2].value]
-    new_heatmap = tf.image.resize(heatmap, [xp.shape[2].value, xp.shape[2].value])
+    new_heatmap = tf.image.resize(heatmap[0], [xp.shape[2].value, xp.shape[2].value])
     """Visual features (for action only)."""
     action = []
     if do_action:
@@ -159,7 +158,7 @@ def prediction_block(heatmap, xp, xa, zp, outlist, cfg, do_action, name=None):
         act_cnt += 1
         act_name = 'act%d' % act_cnt
         def get_tensor(x):
-            return tf.convert_to_tensor(np.random.rand(1, 8, xp.shape[2].value, xp.shape[2].value, 20).astype(np.float32))
+            return new_heatmap
         act_h = Lambda(get_tensor)(xp)
         #act_h = tf.convert_to_tensor(np.random.rand(1, 8, xp.shape[2].value, xp.shape[2].value, 20).astype(np.float32))
         print("shape of heatmap:")
@@ -296,7 +295,7 @@ def build(cfg, stop_grad_stem=False):
             'Invalid input_shape ({})'.format(input_shape)
 
     inp = Input(shape=input_shape)
-    input_heatmap = Input(shape=(56, 56))
+    input_heatmap = Input(shape=(8, 56, 56, 1))
     outlist = [] # Holds [[poses], [dbg1], [action1], [actions2], ...]
     for i in range(len(cfg.num_actions) + 1 + 2*cfg.dbg_decoupled_pose):
         outlist.append([])
