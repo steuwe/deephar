@@ -327,11 +327,11 @@ def build(cfg, stop_grad_stem=False):
         do_action = (pyr + 1) in cfg.action_pyramids
 
         if pyr % 2 == 0: # Even pyramids (0, 2, ...)
-            downscaling_pyramid(heatmap, lp, la, lzp, outlist, cfg, do_action,
+            downscaling_pyramid(input_heatmap, lp, la, lzp, outlist, cfg, do_action,
                     name='dp%d' % (pyr+1))
 
         else: # Odd pyramids (1, 3, ...)
-            upscaling_pyramid(heatmap, lp, la, lzp, outlist, cfg, do_action,
+            upscaling_pyramid(input_heatmap, lp, la, lzp, outlist, cfg, do_action,
                     name='up%d' % (pyr+1))
 
     outputs = []
