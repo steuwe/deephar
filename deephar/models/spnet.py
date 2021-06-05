@@ -157,9 +157,7 @@ def prediction_block(heatmap, xp, xa, zp, outlist, cfg, do_action, name=None):
             act_cnt = 0
         act_cnt += 1
         act_name = 'act%d' % act_cnt
-        def get_tensor(x):
-            return new_heatmap
-        act_h = Lambda(get_tensor)(xp)
+        act_h = Lambda(lambda x:new_heatmap)(heatmap)
         #act_h = tf.convert_to_tensor(np.random.rand(1, 8, xp.shape[2].value, xp.shape[2].value, 20).astype(np.float32))
         print("shape of heatmap:")
         print(act_h.shape)
