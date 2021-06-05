@@ -149,7 +149,7 @@ def prediction_block(heatmap, xp, xa, zp, outlist, cfg, do_action, name=None):
     dbg_decoupled_pose = cfg.dbg_decoupled_pose and do_action
     dbg_decoupled_h = cfg.dbg_decoupled_h and do_action
     new_shape = [xp.shape[2].value, xp.shape[2].value]
-    new_heatmap = tf.image.resize(heatmap, [1, 8, xp.shape[2].value, xp.shape[2].value, 1]
+    new_heatmap = tf.image.resize(heatmap, [1, 8, xp.shape[2].value, xp.shape[2].value, 1])
     """Visual features (for action only)."""
     action = []
     if do_action:
