@@ -338,7 +338,7 @@ def build(cfg, stop_grad_stem=False):
     for o in outlist:
         outputs += o
 
-    model = Model(inputs=[inp, input_heatmap, outputs=outputs, name='SPNet')
+    model = Model(inputs=[inp, input_heatmap], outputs=outputs, name='SPNet')
 
     return model
 
