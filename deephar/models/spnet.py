@@ -293,7 +293,7 @@ def build(cfg, stop_grad_stem=False):
             'Invalid input_shape ({})'.format(input_shape)
 
     inp = Input(shape=input_shape)
-    input_heatmap = Input(shape=(8, 56, 56, 1))
+    input_heatmap = Input(shape=(8, 56, 56, 20))
     outlist = [] # Holds [[poses], [dbg1], [action1], [actions2], ...]
     for i in range(len(cfg.num_actions) + 1 + 2*cfg.dbg_decoupled_pose):
         outlist.append([])
